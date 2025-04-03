@@ -55,6 +55,7 @@ header h1 {
     color: white;
     align-self: flex-end;
     margin-left: auto;
+    animation:fadeIn 3s
 }
 
 .bot {
