@@ -110,7 +110,6 @@
       background: #3b7dd8;
     }
 
-    /* Optional bot message formatting */
     .bot h3 {
       font-size: 15px;
       margin-bottom: 4px;
@@ -130,6 +129,11 @@
       padding: 1px 4px;
       border-radius: 4px;
     }
+
+    .loading {
+      font-style: italic;
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -141,9 +145,7 @@
         <small>Online</small>
       </div>
     </div>
-    <div id="chat-messages" class="chat-messages">
-      <!-- Messages will appear here -->
-    </div>
+    <div id="chat-messages" class="chat-messages"></div>
     <div class="chat-input">
       <input id="chat-input" type="text" placeholder="Type a message..." />
       <button id="send-btn">Send</button>
@@ -151,7 +153,7 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", () => {
       const sendBtn = document.getElementById("send-btn");
       const chatInput = document.getElementById("chat-input");
       const chatMessages = document.getElementById("chat-messages");
@@ -166,6 +168,7 @@
         if (userMessage) {
           appendMessage("user", userMessage);
           chatInput.value = "";
+          appendMessage("bot", "<span class='loading'>Typing...</span>");
           getBotResponse(userMessage);
         }
       }
@@ -173,14 +176,7 @@
       function appendMessage(sender, message) {
         const messageElement = document.createElement("div");
         messageElement.classList.add("message", sender);
-
-        if (sender === "bot") {
-          const formattedMessage = formatBotMessage(message);
-          messageElement.innerHTML = formattedMessage;
-        } else {
-          messageElement.textContent = message;
-        }
-
+        messageElement.innerHTML = sender === "bot" ? formatBotMessage(message) : message;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
@@ -216,8 +212,7 @@
       }
 
       async function getBotResponse(userMessage) {
-        const API_KEY = "AIzaSyAxBEp1O6TKzz6b9d1Txxq_U7_GB8mL9m0
-"; // Replace with your Gemini API key
+        const API_KEY="AIzaSyAxBEp1O6TKzz6b9d1Txxq_U7_GB8mL9m0"; // Replace with your Gemini API key (use proxy server in production)
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
         try {
@@ -231,6 +226,9 @@
 
           const data = await response.json();
 
+          // Remove typing message
+          chatMessages.lastChild.remove();
+
           if (!data.candidates || !data.candidates.length) {
             throw new Error("No response from Gemini API");
           }
@@ -239,7 +237,8 @@
           appendMessage("bot", botMessage);
         } catch (error) {
           console.error("Error:", error);
-          appendMessage("bot", "Sorry, I'm having trouble responding. Please try again.");
+          chatMessages.lastChild.remove();
+          appendMessage("bot", "Sorry, I'm having trouble responding. Please try again later.");
         }
       }
     });
